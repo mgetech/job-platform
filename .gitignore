@@ -1,0 +1,67 @@
+# Ignore Rails-specific files and directories
+/bin/*
+!/bin/setup # Keep setup script
+
+# Dependency installation
+/vendor/bundle/
+.bundle/
+
+# Runtime files
+/tmp/*
+/log/*.log
+/public/assets/
+/storage/
+/.byebug_history
+/.foreman
+.env # Crucial for your database password!
+
+# Development and testing files
+/db/*.sqlite3 # In case you ever switch to SQLite temporarily
+/db/*.bak
+/db/schema.rb # Usually committed, but sometimes ignored in complex setups
+coverage/
+.resultset.json # For RSpec coverage or similar tools
+.rspec
+.rubocop_todo.yml
+.rubocop_cache/
+
+# Bundler config
+.bundle/config
+
+# RubyMine and other IDE/Editor files
+.idea/                # RubyMine/IntelliJ IDEA project files
+.DS_Store             # macOS desktop services store
+Thumbs.db             # Windows thumbnail cache
+*.sublime-project
+*.sublime-workspace
+.vscode/
+
+# Compiled files
+*.rej
+*.bak
+*.swp
+*.swo
+*.o
+*.a
+*.so
+*.lo
+*.la
+*.dll
+*.class
+
+# Test framework and build tool files
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Configuration files
+# If you are using Rails 5.2+ and have encrypted credentials,
+# master.key and credentials.yml.enc should be committed.
+# Only ignore master.key if you are managing it completely out of band.
+# config/master.key
+# config/credentials.yml.enc
+
+# Other sensitive files (if you create them)
+.env.*.local
+.keep
+.env
