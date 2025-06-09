@@ -56,9 +56,9 @@ end
 group :development, :test do
   # For .evn file
   gem "dotenv-rails"
-  gem 'bcrypt'
-  gem 'jwt'
-  gem 'rspec-rails'
+  gem "bcrypt"
+  gem "jwt"
+  gem "rspec-rails"
 end
 
 
@@ -71,4 +71,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  gem "database_cleaner"
+  gem "database_cleaner-active_record"
+  gem "shoulda-matchers"
 end

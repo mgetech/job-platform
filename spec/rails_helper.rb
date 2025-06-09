@@ -8,6 +8,8 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 # that will avoid rails generators crashing because migrations haven't been run yet
 # return unless Rails.env.test?
 require 'rspec/rails'
+require 'database_cleaner'
+require 'database_cleaner/active_record'
 # Add additional requires below this line. Rails is not loaded until this point!
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
@@ -35,15 +37,56 @@ rescue ActiveRecord::PendingMigrationError => e
   abort e.to_s.strip
 end
 RSpec.configure do |config|
-  # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
   ]
 
-  # If you're not using ActiveRecord, or you'd prefer not to run each of your
-  # examples within a transaction, remove the following line or assign false
-  # instead of true.
-  config.use_transactional_fixtures = true
+  # Disable RSpec's built-in transactional fixtures.
+  # DatabaseCleaner will now manage database transactions/truncation.
+  config.use_transactional_fixtures = false
+
+  # Configure DatabaseCleaner
+  config.before(:suite) do
+    # Explicitly configure the ActiveRecord strategy for the entire suite
+    # This ensures a clean slate before the entire test suite runs
+    DatabaseCleaner[:active_record].clean_with(:truncation) # <--- USE THIS METHOD
+  end
+
+  config.before(:each) do
+    # Set the default strategy for each example (transaction is usually faster for unit/request specs)
+    DatabaseCleaner[:active_record].strategy = :transaction
+  end
+
+  # Configure truncation strategy for specific test types that need it (e.g., system/feature tests)
+  config.before(:each, type: :feature) do
+    DatabaseCleaner[:active_record].strategy = :truncation
+  end
+
+  config.before(:each, type: :system) do
+    DatabaseCleaner[:active_record].strategy = :truncation
+  end
+
+  # Start and clean the database for each example
+  config.before(:each) do
+    DatabaseCleaner[:active_record].start
+  end
+
+  config.after(:each) do
+    DatabaseCleaner[:active_record].clean
+  end
+
+
+  Shoulda::Matchers.configure do |shoulda_config|
+    shoulda_config.integrate do |with|
+      # Choose a test framework:
+      with.test_framework :rspec
+
+      # Choose an ORM:
+      with.library :active_record
+      with.library :rails
+    end
+  end
+
 
   # You can uncomment this line to turn off ActiveRecord support entirely.
   # config.use_active_record = false
