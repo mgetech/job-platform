@@ -51,8 +51,16 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
-# For .evn file
-gem "dotenv-rails"
+
+
+group :development, :test do
+  # For .evn file
+  gem "dotenv-rails"
+  gem 'bcrypt'
+  gem 'jwt'
+  gem 'rspec-rails'
+end
+
 
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
