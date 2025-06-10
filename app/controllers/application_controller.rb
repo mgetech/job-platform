@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::API
   include JsonWebToken
 
+  # Add this block to handle ActiveRecord::RecordNotFound errors globally
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   before_action :authenticate_request!
 
   attr_reader :current_user
@@ -12,6 +14,10 @@ class ApplicationController < ActionController::API
     header = header.split(' ').last if header
     unless header
       render json: { errors: 'Unauthorized', details: 'No authentication token provided.' }, status: :unauthorized and return
+    end
+
+    def render_not_found(exception)
+      render json: { errors: "Record not found" }, status: :not_found
     end
 
     begin

@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_10_163030) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_10_174010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "bewerbungen", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "job_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_id"], name: "index_bewerbungen_on_job_id"
+    t.index ["user_id", "job_id"], name: "index_bewerbungen_on_user_id_and_job_id", unique: true
+    t.index ["user_id"], name: "index_bewerbungen_on_user_id"
+  end
 
   create_table "job_languages", force: :cascade do |t|
     t.bigint "job_id", null: false
@@ -55,6 +65,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_10_163030) do
     t.index ["email"], name: "index_users_on_email_unique", unique: true
   end
 
+  add_foreign_key "bewerbungen", "jobs"
+  add_foreign_key "bewerbungen", "users"
   add_foreign_key "job_languages", "jobs"
   add_foreign_key "job_languages", "languages"
   add_foreign_key "shifts", "jobs"
