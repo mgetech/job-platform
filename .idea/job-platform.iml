@@ -163,7 +163,7 @@
     <orderEntry type="library" scope="PROVIDED" name="zeitwerk (v2.7.3, ruby-3.4.4-p34) [gem]" level="application" />
   </component>
   <component name="RModuleSettingsStorage">
-    <LOAD_PATH number="1" string0="D:\Utilities\Projects\Ruby\job-platform\app\lib" />
+    <LOAD_PATH number="3" string0="D:\Utilities\Projects\Ruby\job-platform\app\lib" string1="D:\Utilities\Projects\Ruby\job-platform\app\serializers" string2="D:\Utilities\Projects\Ruby\job-platform\app\queries" />
     <I18N_FOLDERS number="1" string0="$MODULE_DIR$/config/locales" />
   </component>
   <component name="RailsPaths" isManagedAutomatically="true">
