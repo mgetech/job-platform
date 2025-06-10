@@ -11,7 +11,7 @@ class AuthController < ApplicationController
   end
 
   def login
-    user = User.find_by(username: params[:username])
+    user = User.find_by(email: params[:email])
     if user&.authenticate(params[:password])
       render json: { token: JsonWebToken.encode(user_id: user.id), role: user.role }, status: :ok
     else
@@ -22,6 +22,10 @@ class AuthController < ApplicationController
   private
 
   def register_params
-    params.permit(:name, :username, :password)
+    params.permit(:name, :email, :password)
+  end
+
+  def user_params
+    params.permit(:email, :password)
   end
 end

@@ -6,85 +6,93 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
-
   # --- Validations ---
   describe 'validations' do
-    # Test for presence of 'name'
-    it 'is valid with a name' do
-      user = User.new(name: 'Test User', username: 'testuser', password: 'password')
-      expect(user).to be_valid # Expect the user to be valid if name is present
-    end
-
-    it 'is invalid without a name' do
-      user = User.new(name: nil, username: 'testuser', password: 'password')
-      expect(user).not_to be_valid # Expect the user to be invalid if name is missing
-      expect(user.errors[:name]).to include("can't be blank") # Check specific error message
-    end
-
-    # Test for presence of 'username'
-    it 'is valid with a username' do
-      user = User.new(name: 'Test User', username: 'testuser', password: 'password')
+    it 'is valid with valid attributes' do
+      user = User.new(name: "Test User", email: "test@example.com", password: "password", role: :user)
       expect(user).to be_valid
     end
 
-    it 'is invalid without a username' do
-      user = User.new(name: 'Test User', username: nil, password: 'password')
-      expect(user).not_to be_valid
-      expect(user.errors[:username]).to include("can't be blank")
+    it 'is valid with a name' do
+      user = User.new(name: 'Test User', email: "test@example.com", password: 'password')
+      expect(user).to be_valid
     end
 
-    # Test for uniqueness of 'username'
-    it 'is invalid with a duplicate username' do
-      User.create!(name: 'Existing User', username: 'existinguser', password: 'password') # Create an existing user
-      user = User.new(name: 'New User', username: 'existinguser', password: 'anotherpassword') # Try to create one with same username
+    it 'is invalid without a name' do
+      user = User.new(name: nil, email: "test@example.com", password: "password", role: :user)
       expect(user).not_to be_valid
-      expect(user.errors[:username]).to include("has already been taken")
+      expect(user.errors[:name]).to include("can't be blank")
     end
 
-    # Test for password presence (handled by has_secure_password indirectly)
+    it 'is invalid without an email' do
+      user = User.new(name: "Test User", email: nil, password: "password", role: :user)
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include("can't be blank")
+    end
+
+    it 'is invalid with a duplicate email (case-insensitive)' do
+      User.create!(name: "Existing User", email: "duplicate@example.com", password: "password", role: :user)
+      user = User.new(name: "Another User", email: "Duplicate@example.com", password: "another_password", role: :user)
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include("has already been taken")
+    end
+
+    it 'is invalid with an invalid email format' do
+      user = User.new(name: "Invalid User", email: "invalid-email", password: "password", role: :user)
+      expect(user).not_to be_valid
+      expect(user.errors[:email]).to include("is not a valid email format")
+    end
+
+    it 'is valid with a valid email format' do
+      user = User.new(name: "Valid User", email: "valid@example.com", password: "password", role: :user)
+      expect(user).to be_valid
+    end
+
     it 'is invalid without a password' do
-      user = User.new(name: 'Test User', username: 'testuser', password: nil)
+      user = User.new(name: "Test User", email: "test_no_pass@example.com", password: nil, role: :user)
       expect(user).not_to be_valid
       expect(user.errors[:password]).to include("can't be blank")
     end
-  end
 
-  # --- has_secure_password functionality ---
-  describe 'password authentication' do
-    let(:user) { User.create!(name: 'Auth User', username: 'authuser', password: 'securepassword') }
-
-    it 'authenticates with a correct password' do
-      # The 'authenticate' method is provided by has_secure_password
-      expect(user.authenticate('securepassword')).to eq(user)
-    end
-
-    it 'does not authenticate with an incorrect password' do
-      expect(user.authenticate('wrongpassword')).to be_falsey # be_falsey matches false or nil
+    it 'is invalid with a password less than 6 characters' do
+      user = User.new(name: "Test User", email: "test_short_pass@example.com", password: "123", role: :user)
+      expect(user).not_to be_valid
+      expect(user.errors[:password]).to include("is too short (minimum is 6 characters)")
     end
   end
 
-  # --- Enum for roles ---
-  describe 'role enum' do
-    let(:user_role_user) { User.create!(name: 'Standard User', username: 'stduser', password: 'password', role: :user) }
-    let(:user_role_admin) { User.create!(name: 'Admin User', username: 'admuser', password: 'password', role: :admin) }
-
-    it 'correctly assigns the default role' do
-      new_user = User.new(name: 'Default Role', username: 'defaultrole', password: 'password')
-      new_user.save # Save to trigger default
-      expect(new_user.role).to eq('user')
-      expect(new_user.user?).to be_truthy
+  # --- Roles ---
+  describe 'roles' do
+    it 'sets role to user by default' do
+      user = User.create!(name: "Default User", email: "default@example.com", password: "password")
+      expect(user.user?).to be_truthy
+      expect(user.role).to eq('user')
     end
 
-    it 'correctly assigns the admin role' do
-      expect(user_role_admin.role).to eq('admin')
-      expect(user_role_admin.admin?).to be_truthy
+    it 'can set role to admin' do
+      user = User.create!(name: "Admin User", email: "admin@example.com", password: "password", role: :admin)
+      expect(user.admin?).to be_truthy
+      expect(user.role).to eq('admin')
     end
 
-    it 'responds to role predicate methods' do
-      expect(user_role_user.user?).to be_truthy
-      expect(user_role_user.admin?).to be_falsey
-      expect(user_role_admin.admin?).to be_truthy
-      expect(user_role_admin.user?).to be_falsey
+    it 'has correct enum values' do
+      expect(User.roles[:user]).to eq(0)
+      expect(User.roles[:admin]).to eq(1)
+    end
+  end
+
+  # --- Authentication ---
+  describe '#authenticate' do
+    let(:user) { User.create!(name: "Auth User", email: "auth@example.com", password: "correctpassword") }
+
+    it 'returns the user if password is correct' do
+      authenticated_user = user.authenticate("correctpassword")
+      expect(authenticated_user).to eq(user)
+    end
+
+    it 'returns false if password is incorrect' do
+      authenticated_user = user.authenticate("wrongpassword")
+      expect(authenticated_user).to be_falsey
     end
   end
 end
