@@ -2,6 +2,8 @@ class Job < ApplicationRecord
   has_many :job_languages, dependent: :destroy
   has_many :languages, through: :job_languages
   has_many :shifts, dependent: :destroy
+  has_many :bewerbungen, class_name: 'Bewerbung'
+  has_many :applicants, through: :bewerbungen, source: :user
 
   accepts_nested_attributes_for :shifts, allow_destroy: true
   accepts_nested_attributes_for :languages, allow_destroy: true

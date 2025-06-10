@@ -1,5 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
+  has_many :bewerbungen, class_name: 'Bewerbung'
+  has_many :applied_jobs, through: :bewerbungen, source: :job
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: { case_sensitive: false },
