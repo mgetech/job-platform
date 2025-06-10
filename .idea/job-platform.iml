@@ -55,6 +55,9 @@
     <orderEntry type="library" scope="PROVIDED" name="concurrent-ruby (v1.3.5, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="connection_pool (v2.5.3, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="crass (v1.0.6, ruby-3.4.4-p34) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="database_cleaner (v2.1.0, ruby-3.4.4-p34) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="database_cleaner-active_record (v2.2.1, ruby-3.4.4-p34) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="database_cleaner-core (v2.0.1, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="date (v3.4.1, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="debug (v1.10.0, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="diff-lcs (v1.6.2, ruby-3.4.4-p34) [gem]" level="application" />
@@ -135,6 +138,7 @@
     <orderEntry type="library" scope="PROVIDED" name="rubyzip (v2.4.1, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="securerandom (v0.4.1, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="selenium-webdriver (v4.33.0, ruby-3.4.4-p34) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="shoulda-matchers (v6.5.0, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="solid_cable (v3.0.8, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="solid_cache (v1.0.7, ruby-3.4.4-p34) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="solid_queue (v1.1.5, ruby-3.4.4-p34) [gem]" level="application" />
@@ -159,7 +163,7 @@
     <orderEntry type="library" scope="PROVIDED" name="zeitwerk (v2.7.3, ruby-3.4.4-p34) [gem]" level="application" />
   </component>
   <component name="RModuleSettingsStorage">
-    <LOAD_PATH number="1" string0="D:\Utilities\Projects\Ruby\job-platform\app\lib" />
+    <LOAD_PATH number="3" string0="D:\Utilities\Projects\Ruby\job-platform\app\lib" string1="D:\Utilities\Projects\Ruby\job-platform\app\serializers" string2="D:\Utilities\Projects\Ruby\job-platform\app\queries" />
     <I18N_FOLDERS number="1" string0="$MODULE_DIR$/config/locales" />
   </component>
   <component name="RailsPaths" isManagedAutomatically="true">

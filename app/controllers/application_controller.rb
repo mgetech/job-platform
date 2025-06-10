@@ -1,22 +1,32 @@
 class ApplicationController < ActionController::API
   include JsonWebToken
 
-  before_action :authenticate_request
+  before_action :authenticate_request!
 
   attr_reader :current_user
 
   private
 
-  def authenticate_request
+  def authenticate_request!
     header = request.headers['Authorization']
-    token = header.split.last if header
-    decoded = JsonWebToken.decode(token)
-    @current_user = User.find_by(id: decoded[:user_id]) if decoded
-  rescue
-    render json: { errors: 'Unauthorized' }, status: :unauthorized
+    header = header.split(' ').last if header
+    unless header
+      render json: { errors: 'Unauthorized', details: 'No authentication token provided.' }, status: :unauthorized and return
+    end
+
+    begin
+      @decoded = JsonWebToken.decode(header)
+      @current_user = User.find(@decoded[:user_id])
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { errors: 'Unauthorized', details: e.message }, status: :unauthorized and return
+    rescue JWT::DecodeError => e
+      render json: { errors: 'Unauthorized', details: e.message }, status: :unauthorized and return
+    end
   end
 
   def authorize_admin!
-    render json: { error: 'Forbidden' }, status: :forbidden unless current_user&.admin?
+    unless @current_user&.admin?
+      render json: { error: 'Forbidden' }, status: :forbidden and return
+    end
   end
 end

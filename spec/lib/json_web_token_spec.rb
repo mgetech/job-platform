@@ -3,8 +3,8 @@
 # in isolation, ensuring the token generation and validation logic is sound.
 
 require 'rails_helper'
-require 'json_web_token'
-
+# require 'json_web_token'
+require Rails.root.join('spec', 'lib', 'json_web_token_spec')
 RSpec.describe JsonWebToken do
   # 'describe' block for the JsonWebToken module.
   # Since it's a module with class methods, we don't specify a 'type'.
