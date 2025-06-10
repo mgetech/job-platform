@@ -3,8 +3,8 @@ require 'rails_helper'
 RSpec.describe 'Jobs API', type: :request do
   # --- Authentication Setup ---
   # These users and tokens will be cleaned by DatabaseCleaner after each test.
-  let!(:admin_user) { User.create!(name: "Admin User", username: "admin_test", password: "password", role: :admin) }
-  let!(:regular_user) { User.create!(name: "Regular User", username: "regular_test", password: "password", role: :user) }
+  let!(:admin_user) { User.create!(name: "Admin User", email: "admin_test@example.com", password: "password", role: :admin) }
+  let!(:regular_user) { User.create!(name: "Regular User", email: "regular_test@example.com", password: "password", role: :user) }
   let(:admin_headers) { { 'Authorization' => "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" } }
   let(:regular_user_headers) { { 'Authorization' => "Bearer #{JsonWebToken.encode(user_id: regular_user.id)}" } }
   let(:no_auth_headers) { {} } # For unauthenticated requests
