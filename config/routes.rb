@@ -15,6 +15,10 @@ Rails.application.routes.draw do
 
   post '/register', to: 'auth#register'
   post '/login', to: 'auth#login'
-  resources :jobs, only: [:index, :create]
+  resources :jobs, only: [:index, :create] do
+    resources :bewerbungen, only: [:create]
+  end
+
+  resources :bewerbungen, only: [:index]
 end
 
