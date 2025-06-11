@@ -224,14 +224,14 @@ paths:
                           format: date-time
                           description: End time of the shift
                       required:
-                      - start_time
-                      - end_time
+                        - start_time
+                        - end_time
                     description: Array of shift attributes (at least one, max 7)
               required:
-              - title
-              - hourly_salary
-              - language_ids
-              - shifts_attributes
+                - title
+                - hourly_salary
+                - language_ids
+                - shifts_attributes
             example:
               job:
                 title: "Example Job for Creation"
@@ -300,6 +300,37 @@ paths:
                   - spoken_languages
                   - shift_hours
                   - total_earnings
+  "/languages":
+    get:
+      summary: Retrieves all languages
+      tags:
+      - Languages
+      responses:
+        '200':
+          description: list of languages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Unique identifier of the language
+                    name:
+                      type: string
+                      description: Name of the language (e.g., "English")
+                  required:
+                  - id
+                  - name
+                example:
+                - id: 1
+                  name: English
+                - id: 2
+                  name: German
+                - id: 3
+                  name: Spanish
 servers:
 - url: http://{defaultHost}
   variables:

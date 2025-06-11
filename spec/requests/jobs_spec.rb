@@ -1,4 +1,3 @@
-# spec/requests/jobs_spec.rb
 require 'swagger_helper'
 
 RSpec.describe 'Jobs API', type: :request do
@@ -35,7 +34,7 @@ RSpec.describe 'Jobs API', type: :request do
     post 'Creates a new job posting' do
       tags 'Jobs'
       security [Bearer: []]
-      consumes 'application/json' # Ensure this is present and correct
+      consumes 'application/json'
 
       parameter name: :job, in: :body, schema: {
         type: :object,
@@ -62,12 +61,12 @@ RSpec.describe 'Jobs API', type: :request do
         },
         required: %w[title hourly_salary language_ids shifts_attributes]
       }, description: 'Job creation parameters',
-                # ENSURE THIS 'example' BLOCK IS AT THE SAME LEVEL AS 'name', 'in', 'schema', 'description'
+
                 example: {
-                  job: { # This 'job' key must be here to match your controller's params.require(:job)
+                  job: {
                          title: "Example Job Title",
                          hourly_salary: 30.0,
-                         language_ids: [1], # IMPORTANT: Use a valid language ID from your DEVELOPMENT DB (e.g., check `Language.all.pluck(:id, :name)` in `rails c`)
+                         language_ids: [1],
                          shifts_attributes: [
                            { start_time: (1.day.from_now + 9.hours).iso8601, end_time: (1.day.from_now + 17.hours).iso8601 }
                          ]
@@ -75,7 +74,6 @@ RSpec.describe 'Jobs API', type: :request do
                 }
 
       response '201', 'job created successfully' do
-        # MODIFIED: Provide a robust example for `let(:job)` that will be sent by Rswag
         let(:job) do
           {
             job: {title: "Example Job for Docs",
@@ -192,7 +190,6 @@ RSpec.describe 'Jobs API', type: :request do
     end
   end
 
-  # --- Original RSpec contexts and tests for detailed validation (MOVED INSIDE THE MAIN DESCRIBE BLOCK) ---
   describe 'POST /jobs (detailed RSpec validation)' do
     let(:valid_shift_attributes) do
       [

@@ -1,28 +1,22 @@
-# spec/requests/bewerbungen_spec.rb
 require 'swagger_helper'
 
-# There should only be ONE top-level RSpec.describe block
 RSpec.describe 'Bewerbungen API', type: :request do
   # --- Authentication Setup ---
-  # These users and tokens are now accessible to all nested describe/context blocks
   let!(:admin_user) { User.create!(name: "Admin User", email: "admin@example.com", password: "password", role: :admin) }
   let!(:regular_user_1) { User.create!(name: "Regular User 1", email: "user1@example.com", password: "password", role: :user) }
   let!(:regular_user_2) { User.create!(name: "Regular User 2", email: "user2@example.com", password: "password", role: :user) }
 
-  # These 'let' blocks provide the Authorization header values for Rswag's documentation generation.
-  let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: regular_user_1.id)}" } # Default token for Rswag's examples
+  let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: regular_user_1.id)}" }
   let(:admin_token) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" }
   let(:regular_user_1_token) { "Bearer #{JsonWebToken.encode(user_id: regular_user_1.id)}" }
   let(:regular_user_2_token) { "Bearer #{JsonWebToken.encode(user_id: regular_user_2.id)}" }
   let(:invalid_token) { "Bearer invalid.token.string" }
-  let(:no_token) { "" } # Represents a missing Authorization header
+  let(:no_token) { "" }
 
-  # Define the actual headers used by the non-Rswag tests explicitly here
-  # These are the original ones that were failing due to scoping
   let(:admin_headers) { { 'Authorization' => admin_token } }
   let(:regular_user_1_headers) { { 'Authorization' => regular_user_1_token } }
   let(:regular_user_2_headers) { { 'Authorization' => regular_user_2_token } }
-  let(:no_auth_headers) { {} } # For unauthenticated requests
+  let(:no_auth_headers) { {} }
 
 
   # --- Job and Language Setup ---
@@ -63,7 +57,7 @@ RSpec.describe 'Bewerbungen API', type: :request do
 
       response '201', 'application submitted successfully' do
         let(:job_id) { job_a.id }
-        let(:Authorization) { regular_user_1_token } # Uses a valid regular user token for this example
+        let(:Authorization) { regular_user_1_token }
 
         schema type: :object,
                properties: {
@@ -196,8 +190,7 @@ RSpec.describe 'Bewerbungen API', type: :request do
     end
   end
 
-  # --- Original RSpec contexts and tests for detailed validation (moved inside the main describe block) ---
-  # These are now correctly scoped and will inherit the 'let' variables defined at the top.
+  # --- Original RSpec contexts and tests for detailed validation ---
 
   describe 'POST /jobs/:job_id/bewerbungen (detailed RSpec validation)' do
     context 'when authenticated as a regular user' do

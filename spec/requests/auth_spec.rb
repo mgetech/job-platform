@@ -1,22 +1,21 @@
-# spec/requests/auth_spec.rb
 require 'swagger_helper'
 
-RSpec.describe 'Authentication API', type: :request do # Changed description for clarity
+RSpec.describe 'Authentication API', type: :request do
 
   # --- POST /register ---
   path '/register' do
     post 'Creates a new user account' do
-      tags 'Authentication' # Grouping in Swagger UI
-      consumes 'application/json' # Expected request content type
+      tags 'Authentication'
+      consumes 'application/json'
 
-      parameter name: :user, in: :body, schema: { # Define the request body for registration
+      parameter name: :user, in: :body, schema: {
                                                   type: :object,
                                                   properties: {
                                                     name: { type: :string, description: 'User\'s full name' },
                                                     email: { type: :string, format: 'email', description: 'User\'s email address (must be unique)' },
                                                     password: { type: :string, format: 'password', description: 'User\'s password (minimum 6 characters)' }
                                                   },
-                                                  required: %w[name email password] # Required fields
+                                                  required: %w[name email password]
       }, description: 'User registration details'
 
       response '201', 'user created and token returned' do
@@ -37,7 +36,7 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
       end
 
       response '422', 'invalid registration parameters' do
-        let(:user) { { name: nil, email: 'invalid@example.com', password: 'password123' } } # Example for missing name
+        let(:user) { { name: nil, email: 'invalid@example.com', password: 'password123' } }
         schema type: :object,
                properties: {
                  errors: {
@@ -110,7 +109,7 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
 
   # --- PATCH /users/update_role (Update User Role) ---
   path '/users/update_role' do
-    patch 'Updates a user\'s role (Any Authenticated User)' do # MODIFIED: Description
+    patch 'Updates a user\'s role (Any Authenticated User)' do
       tags 'Authentication'
       security [Bearer: []]
       consumes 'application/json'
@@ -127,14 +126,13 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
       response '200', 'user role updated successfully' do
         let!(:admin_user) { User.create!(name: "Admin for Role Update", email: "role_admin@example.com", password: "password", role: :admin) }
         let!(:user_to_be_updated) { User.create!(name: "User To Update Role", email: "update_me@example.com", password: "password", role: :user) }
-        let!(:regular_updater_user) { User.create!(name: "Regular Updater", email: "updater@example.com", password: "password", role: :user) } # New user for this test
+        let!(:regular_updater_user) { User.create!(name: "Regular Updater", email: "updater@example.com", password: "password", role: :user) }
 
-        # MODIFIED: Use a regular user token to demonstrate any authenticated user can perform this
         let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: regular_updater_user.id)}" }
         let(:user_role_update) do
           {
             email: user_to_be_updated.email,
-            role: 'admin' # Change regular_user_to_change to admin
+            role: 'admin'
           }
         end
 
@@ -158,7 +156,7 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
           json_response = JSON.parse(response.body)
           expect(json_response['user']['email']).to eq(user_to_be_updated.email)
           expect(json_response['user']['role']).to eq('admin')
-          expect(user_to_be_updated.reload.role).to eq('admin') # Verify DB update
+          expect(user_to_be_updated.reload.role).to eq('admin')
         end
       end
 
@@ -174,11 +172,9 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
         run_test!
       end
 
-      # REMOVED: The 403 Forbidden (not admin) test case, as it's no longer forbidden for non-admins.
-
       response '404', 'user not found' do
         let!(:admin_user) { User.create!(name: "Admin for 404", email: "admin_404@example.com", password: "password", role: :admin) }
-        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" } # Still needs an authenticated user, can be admin or regular
+        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" }
         let(:user_role_update) { { email: "nonexistent@example.com", role: "user" } }
 
         schema type: :object,
@@ -193,8 +189,8 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
         let!(:admin_user) { User.create!(name: "Admin for 422", email: "admin_422@example.com", password: "password", role: :admin) }
         let!(:user_for_invalid_role) { User.create!(name: "User for Invalid Role", email: "invalid_role_user@example.com", password: "password", role: :user) }
 
-        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" } # Still needs an authenticated user, can be admin or regular
-        let(:user_role_update) { { email: user_for_invalid_role.email, role: 'super_admin' } } # Invalid role value
+        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" }
+        let(:user_role_update) { { email: user_for_invalid_role.email, role: 'super_admin' } }
 
         schema type: :object,
                properties: {
@@ -208,8 +204,6 @@ RSpec.describe 'Authentication API', type: :request do # Changed description for
 
 
 
-  # The existing RSpec contexts and tests for granular validation
-  # Ensure these are all within the outermost RSpec.describe block
   describe 'POST /register (detailed validation)' do
     context 'with valid parameters' do
       let(:valid_params) do

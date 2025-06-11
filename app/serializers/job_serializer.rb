@@ -4,7 +4,6 @@ class JobSerializer
   end
 
   def as_json(options = {})
-    # Use options for potential future customization, though not strictly needed here
     {
       id: @job.id,
       title: @job.title,
