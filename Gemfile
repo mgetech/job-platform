@@ -52,13 +52,16 @@ group :development, :test do
 end
 
 
-
+gem 'rswag-api'
+gem 'rswag-ui'
 group :development, :test do
   # For .evn file
   gem "dotenv-rails"
   gem "bcrypt"
   gem "jwt"
   gem "rspec-rails"
+  gem 'rswag-specs'
+
 end
 
 

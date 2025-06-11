@@ -1,21 +1,26 @@
-require 'rails_helper'
+# spec/requests/jobs_spec.rb
+require 'swagger_helper'
 
 RSpec.describe 'Jobs API', type: :request do
   # --- Authentication Setup ---
-  # These users and tokens will be cleaned by DatabaseCleaner after each test.
   let!(:admin_user) { User.create!(name: "Admin User", email: "admin_test@example.com", password: "password", role: :admin) }
   let!(:regular_user) { User.create!(name: "Regular User", email: "regular_test@example.com", password: "password", role: :user) }
-  let(:admin_headers) { { 'Authorization' => "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" } }
-  let(:regular_user_headers) { { 'Authorization' => "Bearer #{JsonWebToken.encode(user_id: regular_user.id)}" } }
-  let(:no_auth_headers) { {} } # For unauthenticated requests
+
+  let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" }
+  let(:admin_token) { "Bearer #{JsonWebToken.encode(user_id: admin_user.id)}" }
+  let(:regular_user_token) { "Bearer #{JsonWebToken.encode(user_id: regular_user.id)}" }
+  let(:no_token) { "" }
+
+  let(:admin_headers) { { 'Authorization' => admin_token } }
+  let(:regular_user_headers) { { 'Authorization' => regular_user_token } }
+  let(:no_auth_headers) { {} }
+
 
   # --- Language Setup ---
-  # These will be recreated and cleaned by DatabaseCleaner for each test.
   let!(:english) { Language.create!(name: "English") }
   let!(:german) { Language.create!(name: "German") }
   let!(:spanish) { Language.create!(name: "Spanish") }
 
-  # A helper for creating a basic valid job for testing purposes
   def create_basic_job(title:, hourly_salary:, languages:, shifts_attributes:)
     Job.create!(
       title: title,
@@ -26,7 +31,169 @@ RSpec.describe 'Jobs API', type: :request do
   end
 
   # --- POST /jobs (Create Job) ---
-  describe 'POST /jobs' do
+  path '/jobs' do
+    post 'Creates a new job posting' do
+      tags 'Jobs'
+      security [Bearer: []]
+      consumes 'application/json' # Ensure this is present and correct
+
+      parameter name: :job, in: :body, schema: {
+        type: :object,
+        properties: {
+          title: { type: :string, description: 'Title of the job posting' },
+          hourly_salary: { type: :number, format: :float, description: 'Hourly salary for the job' },
+          language_ids: {
+            type: :array,
+            items: { type: :integer },
+            description: 'IDs of languages required for the job (at least one)'
+          },
+          shifts_attributes: {
+            type: :array,
+            items: {
+              type: :object,
+              properties: {
+                start_time: { type: :string, format: 'date-time', description: 'Start time of the shift' },
+                end_time: { type: :string, format: 'date-time', description: 'End time of the shift' }
+              },
+              required: %w[start_time end_time]
+            },
+            description: 'Array of shift attributes (at least one, max 7)'
+          }
+        },
+        required: %w[title hourly_salary language_ids shifts_attributes]
+      }, description: 'Job creation parameters',
+                # ENSURE THIS 'example' BLOCK IS AT THE SAME LEVEL AS 'name', 'in', 'schema', 'description'
+                example: {
+                  job: { # This 'job' key must be here to match your controller's params.require(:job)
+                         title: "Example Job Title",
+                         hourly_salary: 30.0,
+                         language_ids: [1], # IMPORTANT: Use a valid language ID from your DEVELOPMENT DB (e.g., check `Language.all.pluck(:id, :name)` in `rails c`)
+                         shifts_attributes: [
+                           { start_time: (1.day.from_now + 9.hours).iso8601, end_time: (1.day.from_now + 17.hours).iso8601 }
+                         ]
+                  }
+                }
+
+      response '201', 'job created successfully' do
+        # MODIFIED: Provide a robust example for `let(:job)` that will be sent by Rswag
+        let(:job) do
+          {
+            job: {title: "Example Job for Docs",
+                  hourly_salary: 35.0,
+                  language_ids: [english.id],
+                  shifts_attributes: [
+                    { start_time: 1.day.from_now.iso8601, end_time: (1.day.from_now + 8.hours).iso8601 }
+                  ]
+                }
+          }
+        end
+        let(:Authorization) { admin_token }
+
+        schema type: :object,
+               properties: {
+                 id: { type: :integer, description: 'ID of the created job' },
+                 title: { type: :string, description: 'Title of the job' },
+                 hourly_salary: { type: :string, description: 'Hourly salary' }, # CHANGED TO STRING
+                 spoken_languages: { type: :array, items: { type: :string }, description: 'Names of languages required' },
+                 shift_hours: { type: :array, items: { type: :number, format: :float }, description: 'Duration of each shift in hours' },
+                 total_earnings: { type: :string, description: 'Total potential earnings for all shifts combined' } # CHANGED TO STRING
+               },
+               required: %w[id title hourly_salary spoken_languages shift_hours total_earnings]
+
+        run_test! do |response|
+          expect(response).to have_http_status(:created)
+          json_response = JSON.parse(response.body)
+          expect(json_response['title']).to be_present # Use general assertion as actual value depends on let(:job)
+          expect(json_response['hourly_salary']).to be_present
+        end
+      end
+
+      response '422', 'invalid parameters' do
+        let(:job) { { title: nil, hourly_salary: -10 } }
+        let(:Authorization) { admin_token }
+
+        schema type: :object,
+               properties: {
+                 errors: {
+                   type: :array,
+                   items: { type: :string, example: "Title can't be blank" },
+                   description: 'Array of error messages from validation'
+                 }
+               },
+               required: ['errors']
+
+        run_test!
+      end
+
+      response '403', 'forbidden (not admin)' do
+        let(:job) { { title: "Forbidden Test", hourly_salary: 10, language_ids: [english.id], shifts_attributes: [{start_time: Time.now.iso8601, end_time: (Time.now + 1.hour).iso8601}] } } # Minimal valid params for this
+        let(:Authorization) { regular_user_token }
+
+        schema type: :object,
+               properties: {
+                 error: { type: :string, example: "Forbidden", description: 'Error message indicating insufficient permissions' }
+               },
+               required: ['error']
+
+        run_test!
+      end
+
+      response '401', 'unauthorized (no or invalid token)' do
+        let(:job) { { title: "Unauthorized Test", hourly_salary: 10, language_ids: [english.id], shifts_attributes: [{start_time: Time.now.iso8601, end_time: (Time.now + 1.hour).iso8601}] } } # Minimal valid params for this
+        let(:Authorization) { no_token }
+
+        schema type: :object,
+               properties: {
+                 errors: { type: :string, example: "Unauthorized", description: 'Error message indicating lack of authentication' }
+               },
+               required: ['errors']
+
+        run_test!
+      end
+    end
+  end
+
+  # --- GET /jobs (List/Search Jobs) ---
+  path '/jobs' do
+    get 'Retrieves a list of job postings, with optional search' do
+      tags 'Jobs'
+      produces 'application/json'
+
+      parameter name: :title, in: :query, type: :string, required: false, description: 'Search by job title (case-insensitive)'
+      parameter name: :language, in: :query, type: :string, required: false, description: 'Filter by spoken language (case-insensitive)'
+
+      response '200', 'list of jobs' do
+        # Setup data for the test
+        let!(:job_dev_english) { create_basic_job(title: "Web Developer", hourly_salary: 30.0, languages: [english], shifts_attributes: [{start_time: 1.day.from_now, end_time: 1.day.from_now + 8.hours}]) }
+        let!(:job_qa_german) { create_basic_job(title: "QA Engineer", hourly_salary: 25.0, languages: [german], shifts_attributes: [{start_time: 2.days.from_now, end_time: 2.days.from_now + 7.hours}]) }
+        let!(:job_lead_english_spanish) { create_basic_job(title: "Team Lead", hourly_salary: 50.0, languages: [english, spanish], shifts_attributes: [{start_time: 3.days.from_now, end_time: 3.days.from_now + 6.hours}]) }
+        let!(:job_junior_dev) { create_basic_job(title: "Junior Developer", hourly_salary: 20.0, languages: [english], shifts_attributes: [{start_time: 4.days.from_now, end_time: 4.days.from_now + 5.hours}]) }
+
+        let(:Authorization) { no_token } # This endpoint is public, so no token is needed for the example
+        let(:title) { 'Developer' } # Example query parameter for Swagger UI
+        let(:language) { 'English' } # Example query parameter for Swagger UI
+
+        schema type: :array,
+               items: {
+                 type: :object,
+                 properties: {
+                   id: { type: :integer, description: 'ID of the job' },
+                   title: { type: :string, description: 'Title of the job' },
+                   hourly_salary: { type: :string, description: 'Hourly salary' }, # CHANGED TO STRING
+                   spoken_languages: { type: :array, items: { type: :string }, description: 'Names of languages required' },
+                   shift_hours: { type: :array, items: { type: :number, format: :float }, description: 'Duration of each shift in hours' },
+                   total_earnings: { type: :string, description: 'Total potential earnings for all shifts combined' } # CHANGED TO STRING
+                 },
+                 required: %w[id title hourly_salary spoken_languages shift_hours total_earnings]
+               }
+
+        run_test!
+      end
+    end
+  end
+
+  # --- Original RSpec contexts and tests for detailed validation (MOVED INSIDE THE MAIN DESCRIBE BLOCK) ---
+  describe 'POST /jobs (detailed RSpec validation)' do
     let(:valid_shift_attributes) do
       [
         { start_time: 2.days.from_now.at_noon, end_time: 2.days.from_now.at_noon + 8.hours },
@@ -50,8 +217,8 @@ RSpec.describe 'Jobs API', type: :request do
         expect {
           post '/jobs', params: valid_job_params, headers: admin_headers
         }.to change(Job, :count).by(1)
-                                .and change(Shift, :count).by(2) # 2 shifts created
-                                                          .and change(JobLanguage, :count).by(2) # 2 languages linked
+                                .and change(Shift, :count).by(2)
+                                                          .and change(JobLanguage, :count).by(2)
 
         expect(response).to have_http_status(:created)
         json_response = JSON.parse(response.body)
@@ -60,10 +227,9 @@ RSpec.describe 'Jobs API', type: :request do
         expect(json_response['title']).to eq("Senior Software Developer")
         expect(json_response['hourly_salary'].to_f).to eq(45.0)
         expect(json_response['spoken_languages']).to match_array(["English", "German"])
-        expect(json_response['shift_hours'].sum).to eq(14.0) # 8 + 6 hours
-        expect(json_response['total_earnings'].to_f).to eq(630.0) # 45.0 * 14.0
+        expect(json_response['shift_hours'].sum).to eq(14.0)
+        expect(json_response['total_earnings'].to_f).to eq(630.0)
 
-        # Verify job data in the database
         created_job = Job.last
         expect(created_job.title).to eq("Senior Software Developer")
         expect(created_job.hourly_salary.to_f).to eq(45.0)
@@ -111,7 +277,6 @@ RSpec.describe 'Jobs API', type: :request do
         post '/jobs', params: invalid_shift_params, headers: admin_headers
         expect(response).to have_http_status(:unprocessable_entity)
         json_response = JSON.parse(response.body)
-        # Note: The error message will typically come from the Shift model's validation
         expect(json_response['errors']).to include("Shifts end time must be after start time")
       end
     end
@@ -133,8 +298,7 @@ RSpec.describe 'Jobs API', type: :request do
     end
   end
 
-  # --- GET /jobs (List/Search Jobs) ---
-  describe 'GET /jobs' do
+  describe 'GET /jobs (detailed RSpec validation)' do
     # Create some diverse job data directly for search tests
     let!(:job_dev_english) { create_basic_job(title: "Web Developer", hourly_salary: 30.0, languages: [english], shifts_attributes: [{start_time: 1.day.from_now, end_time: 1.day.from_now + 8.hours}]) }
     let!(:job_qa_german) { create_basic_job(title: "QA Engineer", hourly_salary: 25.0, languages: [german], shifts_attributes: [{start_time: 2.days.from_now, end_time: 2.days.from_now + 7.hours}]) }
@@ -146,9 +310,8 @@ RSpec.describe 'Jobs API', type: :request do
         get '/jobs', headers: no_auth_headers # Index is public
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
-        expect(json_response.count).to eq(4) # All 4 jobs created above
+        expect(json_response.count).to eq(4)
 
-        # Check structure of one job
         first_job = json_response.first
         expect(first_job).to include('id', 'title', 'hourly_salary', 'total_earnings', 'spoken_languages', 'shift_hours')
         expect(first_job['spoken_languages']).to be_an(Array)
@@ -187,7 +350,7 @@ RSpec.describe 'Jobs API', type: :request do
         get '/jobs', params: { language: 'english' }, headers: no_auth_headers
         expect(response).to have_http_status(:ok)
         json_response = JSON.parse(response.body)
-        expect(json_response.count).to eq(3) # Web Dev, Team Lead, Junior Dev
+        expect(json_response.count).to eq(3)
         titles = json_response.map { |job| job['title'] }
         expect(titles).to match_array(["Web Developer", "Team Lead", "Junior Developer"])
       end

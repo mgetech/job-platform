@@ -19,6 +19,27 @@ class AuthController < ApplicationController
     end
   end
 
+
+  def update_role
+    user_to_update = User.find_by(email: params[:email])
+
+    if user_to_update.nil?
+      render json: { errors: "User with email '#{params[:email]}' not found" }, status: :not_found
+      return
+    end
+
+    unless User.roles.keys.include?(params[:role])
+      render json: { errors: "Invalid role specified" }, status: :unprocessable_entity
+      return
+    end
+
+    if user_to_update.update(role: params[:role])
+      render json: { message: "User role updated successfully", user: { id: user_to_update.id, email: user_to_update.email, role: user_to_update.role } }, status: :ok
+    else
+      render json: { errors: user_to_update.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def register_params
@@ -27,5 +48,9 @@ class AuthController < ApplicationController
 
   def user_params
     params.permit(:email, :password)
+  end
+
+  def role_params
+    params.permit(:email, :role)
   end
 end
