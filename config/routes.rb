@@ -22,5 +22,6 @@ Rails.application.routes.draw do
   end
 
   resources :bewerbungen, only: [:index]
+  resources :languages, only: [:index]
 end
 
