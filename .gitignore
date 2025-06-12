@@ -1,6 +1,6 @@
 # Ignore Rails-specific files and directories
-/bin/*
-!/bin/setup # Keep setup script
+#/bin/*
+#!/bin/setup # Keep setup script
 
 # Dependency installation
 /vendor/bundle/
@@ -64,4 +64,3 @@ Thumbs.db             # Windows thumbnail cache
 # Other sensitive files (if you create them)
 .env.*.local
 .keep
-.env
