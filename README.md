@@ -8,7 +8,7 @@ This repository hosts the Fullstack API for a dynamic job platform.
 
 ### User Management & Authentication:
 
-- **User Registration**: Allows new users to create accounts with a unique email, name, and password. Ensures automatic assignment of a **default user role**. **`update_role` endpoint can be used to change user's role to admin or user**.
+- **User Registration**: Allows new users to create accounts with a unique email, name, and password. Ensures automatic assignment of a **default user role**. `users/update_role` **endpoint can be used to change user's role to admin or user**.
 - **User Login**: Authenticates existing users and provides a secure JSON Web Token (JWT) for subsequent API interactions.
 
 ### Job Management:
@@ -51,7 +51,7 @@ Please ensure you have the following installed:
 
 - **Ruby**: Version 3.4.x (e.g., 3.4.4).
 - **Rails**: Version 8.0.2.
-- **PostgreSQL**: Version 14 or later. Ensure it's running and you have a user with appropriate permissions.
+- **PostgreSQL**: Version 15 or later. Ensure it's running and you have a user with appropriate permissions.
 
 ---
 
