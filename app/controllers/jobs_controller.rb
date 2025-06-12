@@ -10,7 +10,11 @@ class JobsController < ApplicationController
   end
 
   def create
+    Rails.logger.info "Received params: #{params.inspect}"
+    Rails.logger.info "Permitted job_params: #{job_params.inspect}"
     job = Job.new(job_params)
+    Rails.logger.info "Job languages before save: #{job.languages.inspect}"
+
     if job.save
       render json: JobSerializer.new(job).as_json, status: :created
     else

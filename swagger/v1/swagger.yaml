@@ -1,0 +1,345 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/register":
+    post:
+      summary: Creates a new user account
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '201':
+          description: user created and token returned
+        '422':
+          description: invalid registration parameters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: User's full name
+                email:
+                  type: string
+                  format: email
+                  description: User's email address (must be unique)
+                password:
+                  type: string
+                  format: password
+                  description: User's password (minimum 6 characters)
+              required:
+              - name
+              - email
+              - password
+        description: User registration details
+  "/login":
+    post:
+      summary: Logs in a user and returns an authentication token
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '200':
+          description: login successful, token returned
+        '401':
+          description: invalid credentials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+              required:
+              - email
+              - password
+        description: User login credentials
+  "/users/update_role":
+    patch:
+      summary: Updates a user's role (Any Authenticated User)
+      tags:
+      - Authentication
+      security:
+      - Bearer: []
+      parameters: []
+      responses:
+        '200':
+          description: user role updated successfully
+        '401':
+          description: unauthorized (no token)
+        '404':
+          description: user not found
+        '422':
+          description: invalid role specified
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email of the user whose role is to be updated
+                role:
+                  type: string
+                  enum:
+                  - user
+                  - admin
+                  description: The new role for the user
+              required:
+              - email
+              - role
+        description: User role update parameters
+  "/jobs/{job_id}/bewerbungen":
+    post:
+      summary: Creates a new job application for the authenticated user
+      tags:
+      - Applications
+      security:
+      - Bearer: []
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        description: ID of the Job to apply for
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: application submitted successfully
+        '422':
+          description: unprocessable entity (e.g., user already applied)
+        '404':
+          description: not found (job does not exist)
+        '401':
+          description: unauthorized (no or invalid token)
+  "/bewerbungen":
+    get:
+      summary: Retrieves all job applications for the authenticated user
+      tags:
+      - Applications
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: list of user applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID of the application
+                    job_id:
+                      type: integer
+                      description: ID of the applied job
+                    job_title:
+                      type: string
+                      description: Title of the job applied for
+                    applied_at:
+                      type: string
+                      format: date-time
+                      description: Timestamp when the application was created
+                  required:
+                  - id
+                  - job_id
+                  - job_title
+                  - applied_at
+        '401':
+          description: unauthorized (no or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: string
+                    example: Unauthorized
+                    description: Error message indicating lack of authentication
+                required:
+                - errors
+  "/jobs":
+    post:
+      summary: Creates a new job posting
+      tags:
+      - Jobs
+      security:
+      - Bearer: []
+      parameters: []
+      responses:
+        '201':
+          description: job created successfully
+        '422':
+          description: invalid parameters
+        '403':
+          description: forbidden (not admin)
+        '401':
+          description: unauthorized (no or invalid token)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                job:
+                  title:
+                    type: string
+                    description: Title of the job posting
+                  hourly_salary:
+                    type: number
+                    format: float
+                    description: Hourly salary for the job
+                  language_ids:
+                    type: array
+                    items:
+                      type: integer
+                    description: IDs of languages required for the job (at least one)
+                  shifts_attributes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start_time:
+                          type: string
+                          format: date-time
+                          description: Start time of the shift
+                        end_time:
+                          type: string
+                          format: date-time
+                          description: End time of the shift
+                      required:
+                        - start_time
+                        - end_time
+                    description: Array of shift attributes (at least one, max 7)
+              required:
+                - title
+                - hourly_salary
+                - language_ids
+                - shifts_attributes
+            example:
+              job:
+                title: "Example Job for Creation"
+                hourly_salary: 40.0
+                language_ids: [1] # Make sure ID 1 exists in your dev DB
+                shifts_attributes:
+                  - start_time: "2025-06-15T09:00:00Z"
+                    end_time: "2025-06-15T17:00:00Z"
+                  - start_time: "2025-06-16T10:00:00Z"
+                    end_time: "2025-06-16T18:00:00Z"
+        description: Job creation parameters
+    get:
+      summary: Retrieves a list of job postings, with optional search
+      tags:
+      - Jobs
+      parameters:
+      - name: title
+        in: query
+        required: false
+        description: Search by job title (case-insensitive)
+        schema:
+          type: string
+      - name: language
+        in: query
+        required: false
+        description: Filter by spoken language (case-insensitive)
+        schema:
+          type: string
+      responses:
+        '200':
+          description: list of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: ID of the job
+                    title:
+                      type: string
+                      description: Title of the job
+                    hourly_salary:
+                      type: string
+                      description: Hourly salary
+                    spoken_languages:
+                      type: array
+                      items:
+                        type: string
+                      description: Names of languages required
+                    shift_hours:
+                      type: array
+                      items:
+                        type: number
+                        format: float
+                      description: Duration of each shift in hours
+                    total_earnings:
+                      type: string
+                      description: Total potential earnings for all shifts combined
+                  required:
+                  - id
+                  - title
+                  - hourly_salary
+                  - spoken_languages
+                  - shift_hours
+                  - total_earnings
+  "/languages":
+    get:
+      summary: Retrieves all languages
+      tags:
+      - Languages
+      responses:
+        '200':
+          description: list of languages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Unique identifier of the language
+                    name:
+                      type: string
+                      description: Name of the language (e.g., "English")
+                  required:
+                  - id
+                  - name
+                example:
+                - id: 1
+                  name: English
+                - id: 2
+                  name: German
+                - id: 3
+                  name: Spanish
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: localhost:3000
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your JWT Bearer token in the format **Bearer &lt;token>**
